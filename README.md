@@ -1,28 +1,63 @@
-REMIX DEFAULT WORKSPACE
+# Smart Contract Examples: Underflow and Reentrancy Attacks
 
-Remix default workspace is present when:
-i. Remix loads for the very first time 
-ii. A new workspace is created with 'Default' template
-iii. There are no files existing in the File Explorer
+This repository contains Solidity smart contracts that demonstrate vulnerabilities and attacks, specifically underflow attacks and reentrancy attacks, alongside their explanations and usage. These examples are intended for educational purposes only, to help developers understand common smart contract vulnerabilities and how to mitigate them.
 
-This workspace contains 3 directories:
+## Contents
 
-1. 'contracts': Holds three contracts with increasing levels of complexity.
-2. 'scripts': Contains four typescript files to deploy a contract. It is explained below.
-3. 'tests': Contains one Solidity test file for 'Ballot' contract & one JS test file for 'Storage' contract.
+1. Contracts:
+   - `underflow.sol`: Demonstrates an underflow attack where an attacker exploits arithmetic underflow to drain funds from a vulnerable smart contract.
+   - `denial.sol`: Demonstrates a reentrancy attack where an attacker repeatedly calls a vulnerable contract's function to drain its funds before its state is updated.
 
-SCRIPTS
+2. Key Concepts:
+   - Underflow Attack: Occurs when a subtraction operation wraps around due to insufficient checks, causing large unintended balances.
+   - Reentrancy Attack: Happens when a malicious contract calls back into the vulnerable contract before it finishes execution, exploiting the sequence of operations.
 
-The 'scripts' folder has four typescript files which help to deploy the 'Storage' contract using 'web3.js' and 'ethers.js' libraries.
+## Getting Started
 
-For the deployment of any other contract, just update the contract name from 'Storage' to the desired contract and provide constructor arguments accordingly 
-in the file `deploy_with_ethers.ts` or  `deploy_with_web3.ts`
+### Requirements
+- Solidity Compiler: Version `0.8.x` (preferably `^0.8.26` for full compatibility).
+- Remix IDE: [https://remix.ethereum.org](https://remix.ethereum.org).
+- Hardhat (optional): For local development and testing.
 
-In the 'tests' folder there is a script containing Mocha-Chai unit tests for 'Storage' contract.
+### Deployment and Testing
 
-To run a script, right click on file name in the file explorer and click 'Run'. Remember, Solidity file must already be compiled.
-Output from script will appear in remix terminal.
+1. Deploying `underflow.sol`:
+   - Open `underflow.sol` in Remix or your preferred Solidity IDE.
+   - Deploy the `babyDAO` contract.
+   - Fund the `babyDAO` contract with Ether (e.g., 10 ETH).
+   - Deploy the `attacker` contract, passing the `babyDAO` contract's address to its constructor.
+   - Call the `attack()` function in the `attacker` contract to execute the underflow attack.
 
-Please note, require/import is supported in a limited manner for Remix supported modules.
-For now, modules supported by Remix are ethers, web3, swarmgw, chai, multihashes, remix and hardhat only for hardhat.ethers object/plugin.
-For unsupported modules, an error like this will be thrown: '<module_name> module require is not supported by Remix IDE' will be shown.
+2. Deploying `denial.sol`:
+   - Open `denial.sol` in Remix or your preferred Solidity IDE.
+   - Deploy the `Victim` contract.
+   - Fund the `Victim` contract with Ether (e.g., 10 ETH).
+   - Deploy the `Attacker` contract, passing the `Victim` contract's address to its constructor.
+   - Call the `attack()` function in the `Attacker` contract to execute the reentrancy attack.
+
+## Key Vulnerabilities and Mitigations
+
+1. Underflow Vulnerability:
+   - Issue: Arithmetic operations without validation can result in an underflow, where values wrap around to very large numbers.
+   - Mitigation: Use Solidity 0.8+, which includes built-in arithmetic checks. Use SafeMath for older versions of Solidity.
+
+2. Reentrancy Vulnerability:
+   - Issue: Calling an external contract before updating the internal state allows attackers to re-enter the function and drain funds.
+   - Mitigation: Update the contract’s state before transferring Ether. Use a reentrancy guard, such as OpenZeppelin's `ReentrancyGuard`.
+
+## Example Code Snippets
+
+Underflow in `babyDAO`:
+```solidity
+if (credit[msg.sender] == 0) {
+    credit[msg.sender] = 999; // Causes underflow, giving the attacker a huge balance
+} else {
+    credit[msg.sender] -= amount;
+}
+```
+
+Reentrancy in `Victim`:
+```solidity
+(bool sent, bytes memory data) = payable(msg.sender).call{value: owedToAttacker * 10**18}("Completed!");
+owedToAttacker = 0; // State is updated *after* sending Ether
+```
