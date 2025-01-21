@@ -1,4 +1,4 @@
-# Smart Contract Examples: Underflow and Reentrancy Attacks
+# Smart Contract Examples
 
 This repository contains Solidity smart contracts that demonstrate vulnerabilities and attacks, specifically underflow attacks and reentrancy attacks, alongside their explanations and usage. These examples are intended for educational purposes only, to help developers understand common smart contract vulnerabilities and how to mitigate them.
 
